@@ -1,0 +1,19 @@
+# Use root/example as user/password credentials
+version: '3.1'
+
+services:
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "4567-4583:4567-4583"
+      - "${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}"
+    environment:
+      SERVICES: elasticsearch
+  # db:
+  #   image: mysql
+  #   ports:
+  #     - "3306"
+  #   environment:
+  #     MYSQL_DATABASE: demo
+  #     MYSQL_USER: demo
+  #     MYSQL_ROOT_PASSWORD: demo123
