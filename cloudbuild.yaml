@@ -1,0 +1,65 @@
+
+
+substitutions:
+  _IMAGE_NAME: api-demo
+  # _ELASTIC_HOST: https://site:SECRET@gloin-eu-west-1.searchly.com # localhost:9200
+  _CLUSTER_ZONE: europe-west1-b
+  _CLUSTER_NAME: demo01-cluster-py
+
+# Secrets
+# secrets:
+# - kmsKeyName: 'projects/devops-ps-uk-default/locations/global/keyRings/api-demo/cryptoKeys/key'
+#   secretEnv:
+#     # see https://stackoverflow.com/questions/3790454/in-yaml-how-do-i-break-a-string-over-multiple-lines/21699210#21699210
+#     ELASTIC_HOST: >-
+#       CiQAEs5P04Dj6bPqz6pgl4QDEjaYWh5hZFsb+AHXnGQIohupFdYScwCqeoBebHUHka+n63f3ccT16Jg/nH71F5+tV5zfqYdCy/Ol2QvpW6zSP/KN4pu2gE8hiHzbVTiiEuy86W18O+/wwsOeIu3c25uJa4SU3NEnHhYUx/ipqHSRdxgTNHLkotoZKP3ynYoqIkso962yjoqryVY=
+
+steps:
+
+  # Set a source context for the StackDriver debugger
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['debug', 'source', 'gen-repo-info-file', '--output-directory', '.']
+
+  # Build our image
+  # Tag our image as 'latest'
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_IMAGE_NAME:$SHORT_SHA', '-t', 'gcr.io/$PROJECT_ID/$_IMAGE_NAME:latest', '.']
+    timeout: 300s
+
+  # Push to GCR
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/$_IMAGE_NAME:$SHORT_SHA']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/$_IMAGE_NAME:latest']
+
+  # Deploy
+  # - name: 'gcr.io/cloud-builders/kubectl'
+  #   args: ['set', 'image', 'deployment/$_IMAGE_NAME-deployment', 'api-demo=gcr.io/$PROJECT_ID/$_IMAGE_NAME$SHORT_SHA']
+  #   env:
+  #   - 'CLOUDSDK_COMPUTE_ZONE=$_CLUSTER_ZONE'
+  #   - 'CLOUDSDK_CONTAINER_CLUSTER=$_CLUSTER_NAME'
+
+  # Create a values file with secrets
+  # - name: 'gcr.io/cloud-builders/docker'
+  #   entrypoint: "bash"
+  #   args: ['-cx', 'echo ELASTIC_HOST:$$ELASTIC_HOST | tee helm/values.yaml']
+  #   secretEnv:
+  #   - 'ELASTIC_HOST'
+
+  # Deploy using 'helm upgrade'
+  - name: 'gcr.io/$PROJECT_ID/helm'
+    args: [
+      'upgrade', '$_IMAGE_NAME', './helm/',
+      '--install', '--reuse-values',
+      '--set', 'TAG=$SHORT_SHA,GCR_PROJECT_ID=$PROJECT_ID'
+    ]
+    env:
+    - 'CLOUDSDK_COMPUTE_ZONE=$_CLUSTER_ZONE'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=$_CLUSTER_NAME'
+
+images:
+  - 'gcr.io/$PROJECT_ID/$_IMAGE_NAME:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/$_IMAGE_NAME:latest'
+
+
+

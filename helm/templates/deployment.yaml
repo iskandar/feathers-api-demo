@@ -1,0 +1,36 @@
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-deployment"
+  labels:
+    app: {{ .Release.Name | quote }}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {{ .Release.Name | quote }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name | quote }}
+    spec:
+      containers:
+      - name: api-demo
+        image: gcr.io/{{ .Values.GCR_PROJECT_ID }}/api-demo:{{ .Values.TAG }}
+        ports:
+        - containerPort: 3030
+        env:
+        - name: NODE_ENV
+          value: production
+        - name: TAG
+          value: {{ .Values.TAG }}
+        - name: VERSION
+          value: {{ .Values.VERSION }}
+        # This secret must already exist
+        - name: ELASTIC_HOST
+          valueFrom:
+            secretKeyRef:
+              name: api-demo-secrets
+              key: ELASTIC_HOST
+

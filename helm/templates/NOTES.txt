@@ -1,0 +1,14 @@
+{{ .Chart.Name }} installed!
+
+Release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get {{ .Release.Name }}
+
+
+To view the app:
+
+  IP=$(kubectl get svc {{ .Release.Name }}-service -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
+  open http://$IP/docs

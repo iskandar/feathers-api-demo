@@ -1,0 +1,14 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: "{{ .Release.Name }}-service"
+  labels:
+    app: {{ .Release.Name | quote }}
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Release.Name | quote }} # Label selector. The Service targets Pods that use this label
+  ports:
+    - port: 80 # Port used to access the Service from within the cluster.
+      targetPort: 3030 # Port opened by targeted Pods

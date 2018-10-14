@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: api-demo-deployment
+  labels:
+    app: api-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-demo
+  template:
+    metadata:
+      labels:
+        app: api-demo
+    spec:
+      containers:
+      - name: api-demo
+        image: gcr.io/devops-ps-uk-default/api-demo:latest
+        ports:
+        - containerPort: 3030
+        env:
+        - name: ELASTIC_HOST
+          value: "localhost:9200"
+        - name: VERSION
+          value: "1.0.0"
+
